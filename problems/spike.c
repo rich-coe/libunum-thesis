@@ -52,7 +52,7 @@ main(void)
         uabs(&res);
         ulog(&res);
         uout(&res);
-        putchar(’\n’);
+        putchar('\n');
     }
     return 0;
 }

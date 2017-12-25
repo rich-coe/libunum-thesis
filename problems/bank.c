@@ -22,7 +22,7 @@ main(void)
 
         printf("year␣%2d:␣", y);
         uout(&a);
-        putchar(’\n’);
+        putchar('\n');
     }
 
     return 0;

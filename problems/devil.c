@@ -37,9 +37,9 @@ main(void)
 
         uset(&c, &tmp1);
 
-        printf("U_%d␣=␣", n);
+        printf("U_%d = ", n);
         uout(&c);
-        putchar(’\n’);
+        putchar('\n');
     }
     return 0;
 }

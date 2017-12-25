@@ -37,20 +37,20 @@ struct _latticep {
 };
 
 static void
-printunums(struct _unum *unum, size_t numunums)
+printunums(FILE *fp, struct _unum *unum, size_t numunums)
 {
     size_t i;
-    fputs("\nstruct␣_unum␣unums[]␣=␣{\n", stdout);
+    fputs("\nstruct _unum unums[] = {\n", fp);
     for (i = 0; i < numunums; i++) {
         if (isnan(unum[i].val) && !unum[i].name) {
-            printf("\t{␣NAN,␣NULL␣},\n");
+            fprintf(fp, "\t{ NAN, NULL },\n");
         } else if (isinf(unum[i].val)) {
-            printf("\t{␣INFINITY,␣\"%s\"␣},\n", unum[i].name);
+            fprintf(fp, "\t{ INFINITY, \"%s\" },\n", unum[i].name);
         } else {
-            printf("\t{␣%f,␣\"%s\"␣},\n", unum[i].val, unum[i].name);
+            fprintf(fp, "\t{ %f, \"%s\" },\n", unum[i].val, unum[i].name);
         }
     }
-    fputs("};\n", stdout);
+    fputs("};\n", fp);
 }
 
 size_t
@@ -304,22 +304,24 @@ mul(size_t a, size_t b, struct _unumrange *res, struct _unum *unum, size_t numun
 }
 
 static void
-gentable(char *name, void (*f)(size_t, size_t, struct _unumrange *, struct _unum *, size_t), struct _unum *unum, size_t numunums)
+gentable(FILE *fp, char *name, void (*f)(size_t, size_t, struct _unumrange *, struct _unum *, size_t), struct _unum *unum, size_t numunums)
 {
     struct _unumrange res;
     size_t s, z;
 
-    printf("\nstruct␣_unumrange␣%stable[]␣=␣{\n", name);
+    fprintf(fp, "\nstruct _unumrange %stable[] = {\n", name);
+
+    printf("gentable %s %d unums\n", name, numunums);
 
     for (z = 0; z < numunums; z++) {
-        putc('\t', stdout);
+        putc('\t', fp);
         for (s = 0; s <= z; s++) {
             f(s, z, &res, unum, numunums);
-            printf("%s{␣%zd,␣%zd␣},", s ? "␣" : "", res.low, res.upp);
+            fprintf(fp, "%s{ %zd, %zd },", s ? " " : "", res.low, res.upp);
         }
-        fputs("\n", stdout);
+        fputs("\n", fp);
     }
-    fputs("};\n", stdout);
+    fputs("};\n", fp);
 }
 
 void
@@ -339,18 +341,18 @@ ulog(size_t u, struct _unumrange *res, struct _unum *unum, size_t numunums)
 }
 
 static void
-genfunctable(char *name, void (*f)(size_t, struct _unumrange *, struct _unum *, size_t), struct _unum *unum, size_t numunums)
+genfunctable(FILE *fp, char *name, void (*f)(size_t, struct _unumrange *, struct _unum *, size_t), struct _unum *unum, size_t numunums)
 {
     struct _unumrange res;
     size_t u;
 
-    printf("\nstruct␣_unumrange␣%stable[]␣=␣{\n", name);
+    fprintf(fp, "\nstruct _unumrange %stable[] = {\n", name);
 
     for (u = 0; u <= numunums / 2; u++) {
         f(u, &res, unum, numunums);
-        printf("\t{␣%zd,␣%zd␣},\n", res.low, res.upp);
+        fprintf(fp, "\t{ %zd, %zd },\n", res.low, res.upp);
     }
-    fputs("};\n", stdout);
+    fputs("};\n", fp);
 }
 
 static void
@@ -375,9 +377,9 @@ genunums(struct _latticep *lattice, size_t latticesize, struct _unum *unum, size
         if (lattice[i].name[0] == '/') {
             unum[off].name = lattice[i].name + 1;
         } else {
-            /* add ’/’ prefix */
+            /* add '/' prefix */
             if (!(unum[off].name = malloc(strlen(lattice[i].name) + 2))) {
-                fprintf(stderr, "out␣of␣memory\n");
+                fprintf(stderr, "out of memory\n");
                 exit(1);
             }
             strcpy(unum[off].name + 1, lattice[i].name);
@@ -417,7 +419,7 @@ genunums(struct _latticep *lattice, size_t latticesize, struct _unum *unum, size
     for (i = latticesize - 1; i >= 0; i--, off++) {
         unum[off].val = -lattice[i].val;
         if (!(unum[off].name = malloc(strlen(lattice[i].name) + 2))) {
-            fprintf(stderr, "out␣of␣memory\n");
+            fprintf(stderr, "out of memory\n");
             exit(1);
         }
         strcpy(unum[off].name + 1, lattice[i].name);
@@ -440,14 +442,14 @@ genunums(struct _latticep *lattice, size_t latticesize, struct _unum *unum, size
         unum[off].val = - 1 / lattice[i].val;
         if (lattice[i].name[0] == '/') {
             if (!(unum[off].name = strdup(lattice[i].name))) {
-                fprintf(stderr, "out␣of␣memory\n");
+                fprintf(stderr, "out of memory\n");
                 exit(1);
             }
             unum[off].name[0] = '-';
         } else {
-            /* add ’-/’ prefix */
+            /* add '-/' prefix */
             if (!(unum[off].name = malloc(strlen(lattice[i].name) + 3))) {
-                fprintf(stderr, "out␣of␣memory\n");
+                fprintf(stderr, "out of memory\n");
                 exit(1);
             }
             strcpy(unum[off].name + 2, lattice[i].name);
@@ -471,11 +473,11 @@ gendeclattice(struct _latticep **lattice, size_t *latticesize, double maximum, i
      * Check prerequisites
      */
     if (sigdigs == 0) {
-        fprintf(stderr, "invalid␣number␣of␣" "significant␣digits\n");
+        fprintf(stderr, "invalid number of " "significant digits\n");
     }
 
     if ((*latticesize == 0) == isinf(maximum)) {
-        fprintf(stderr, "gendeclattice:␣accepting␣only␣one␣parameter␣besides␣number␣of␣significant␣digits\n");
+        fprintf(stderr, "gendeclattice: accepting only one parameter besides number of significant digits\n");
         exit(1);
     }
 
@@ -494,14 +496,14 @@ gendeclattice(struct _latticep **lattice, size_t *latticesize, double maximum, i
      * Generate lattice
      */
     if (!(*lattice = malloc(sizeof(struct _latticep) * *latticesize))) {
-        fprintf(stderr, "out␣of␣memory\n");
+        fprintf(stderr, "out of memory\n");
         exit(1);
     }
     maxlen = snprintf(NULL, 0, fmt, sigdigs - 1, maximum) + 1;
     for (i = 0; i < *latticesize; i++) {
         (*lattice)[i].val = (1 + c2 * ((i + 1) % (size_t)c1)) * pow(10, floor((i + 1) / c1));
         if (!((*lattice)[i].name = malloc(maxlen))) {
-            fprintf(stderr, "out␣of␣memory\n");
+            fprintf(stderr, "out of memory\n");
             exit(1);
         }
         snprintf((*lattice)[i].name, maxlen, fmt,
@@ -522,10 +524,17 @@ main(void)
     latticesize = (1 << (UBITS - 3)) - 1;
     gendeclattice(&lattice, &latticesize, INFINITY, DIGITS);
 
+    FILE *fp = fopen("unum.h", "w");
+
+    if (NULL == fp) {
+        fprintf(stderr, "cannot open '%s' for writing\n", "unum.h");
+        exit(1);
+    }
+
     /*
      * Print unum.h includes
      */
-    fprintf(stderr, "#include␣<math.h>\n#include␣<stddef.h>\n#include␣<stdint.h>\n\n");
+    fprintf(fp, "#include <math.h>\n#include <stddef.h>\n#include <stdint.h>\n\n");
     /*
      * Determine number of effective bits used
      */
@@ -546,7 +555,7 @@ main(void)
     }
 
     if (bits > types[LEN(types) - 1].bits) {
-        fprintf(stderr, "invalid␣number␣of␣latticepoints\n");
+        fprintf(stderr, "invalid number of latticepoints\n");
         return 1;
     }
 
@@ -559,44 +568,53 @@ main(void)
     }
 
     if (i == LEN(types)) {
-        fprintf(stderr, "cannot␣fit␣bits␣into␣systemtypes\n");
+        fprintf(stderr, "cannot fit bits into systemtypes\n");
         return 1;
     }
 
     /*
      * Print list of preliminary unum.h definitions
      */
-    fprintf(stderr, "typedef␣%s␣unum;\n#define␣ULEN␣%d\n#define␣NUMUNUMS␣%zd\n", types[i].type, bits, numunums);
-    fprintf(stderr, "#define␣UCLAMP(i,␣off)␣(((((off␣<␣0)␣&&␣(i)␣<"
-        "-off)␣?␣\\\n\tNUMUNUMS␣-␣((-off␣-␣(i))␣%%␣NUMUNUMS)␣:"
-        "\\\n\t((off␣>␣0)␣&&␣(i)␣+␣off␣>␣NUMUNUMS␣-␣1)␣?␣\\\n\t"
-        "((i)␣+␣off␣%%␣NUMUNUMS)␣%%␣NUMUNUMS␣:␣(i)␣+␣off))␣%%␣"
+    fprintf(fp, "typedef %s unum;\n#define ULEN %d\n#define NUMUNUMS %zd\n", types[i].type, bits, numunums);
+    fprintf(fp, "#define UCLAMP(i, off) (((((off < 0) && (i) <"
+        "-off) ? \\\n\tNUMUNUMS - ((-off - (i)) %% NUMUNUMS) :"
+        "\\\n\t((off > 0) && (i) + off > NUMUNUMS - 1) ? \\\n\t"
+        "((i) + off %% NUMUNUMS) %% NUMUNUMS : (i) + off)) %% "
         "NUMUNUMS)\n\n");
      
-    fprintf(stderr, "typedef␣struct␣{\n\tuint8_t␣data[%d];\n}␣SORN;\n", (1 << bits) / 8);
+    fprintf(fp, "typedef struct {\n\tuint8_t data[%d];\n} SORN;\n", (1 << bits) / 8);
 
-    fprintf(stderr, "\nvoid␣uadd(SORN␣*,␣SORN␣*);\n"
-            "void␣usub(SORN␣*,␣SORN␣*);\n"
-            "void␣umul(SORN␣*,␣SORN␣*);\n"
-            "void␣udiv(SORN␣*,␣SORN␣*);\n"
-            "void␣uneg(SORN␣*);\n"
-            "void␣uinv(SORN␣*);\n"
-            "void␣uabs(SORN␣*);\n\n"
-            "void␣ulog(SORN␣*);\n\n"
-            "void␣uemp(SORN␣*);\n"
-            "void␣uset(SORN␣*,␣SORN␣*);\n"
-            "void␣ucut(SORN␣*,␣SORN␣*);\n"
-            "void␣uuni(SORN␣*,␣SORN␣*);\n"
-            "int␣uequ(SORN␣*,␣SORN␣*);\n"
-            "int␣usup(SORN␣*,␣SORN␣*);\n\n"
-            "void␣uint(SORN␣*,␣double,␣double);\n"
-            "void␣uout(SORN␣*);\n");
+    fprintf(fp, "\nvoid uadd(SORN *, SORN *);\n"
+            "void usub(SORN *, SORN *);\n"
+            "void umul(SORN *, SORN *);\n"
+            "void udiv(SORN *, SORN *);\n"
+            "void uneg(SORN *);\n"
+            "void uinv(SORN *);\n"
+            "void uabs(SORN *);\n\n"
+            "void ulog(SORN *);\n\n"
+            "void uemp(SORN *);\n"
+            "void uset(SORN *, SORN *);\n"
+            "void ucut(SORN *, SORN *);\n"
+            "void uuni(SORN *, SORN *);\n"
+            "int uequ(SORN *, SORN *);\n"
+            "int usup(SORN *, SORN *);\n\n"
+            "void uint(SORN *, double, double);\n"
+            "void uout(SORN *);\n");
+
+    fclose(fp);
+
+    fp = fopen("table.c", "w");
+
+    if (NULL == fp) {
+        fprintf(stderr, "cannot open '%s' for writing\n", "table.c");
+        exit(1);
+    }
 
     /*
      * Generate unums
      */
     if (!(unum = malloc(sizeof(struct _unum) * numunums))) {
-        fprintf(stderr, "out␣of␣memory\n");
+        fprintf(stderr, "out of memory\n");
         return 1;
     }
     genunums(lattice, latticesize, unum, numunums);
@@ -604,22 +622,23 @@ main(void)
     /*
      * Print table.c includes
      */
-    printf("#include␣\"table.h\"\n");
+    fprintf(fp, "#include \"table.h\"\n");
 
     /*
      * Print list of unums
      */
-    printunums(unum, numunums);
+    printunums(fp, unum, numunums);
 
     /*
      * Generate and print tables
      */
-    gentable("add", add, unum, numunums);
-    gentable("mul", mul, unum, numunums);
+    gentable(fp, "add", add, unum, numunums);
+    gentable(fp, "mul", mul, unum, numunums);
 
     /*
      * Generate function tables
      */
-    genfunctable("log", ulog, unum, numunums);
+    genfunctable(fp, "log", ulog, unum, numunums);
+    fclose(fp);
     return 0;
 }

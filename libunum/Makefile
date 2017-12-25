@@ -15,7 +15,7 @@ table.o: table.c
 	cc ${CFLAGS} -c table.c
 
 table.c: gen
-	./gen 2> unum.h 1> table.c
+	./gen           # unum.h table.c
 
 gen: gen.c
 	cc ${CFLAGS} -o gen -DUBITS=${UBITS} -DDIGITS=${DIGITS} gen.c -lm

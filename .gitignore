@@ -1,0 +1,4 @@
+libunum/table.c
+libunum/unum.h
+*.a
+*.o

@@ -26,14 +26,14 @@ main(void)
     uemp(&e);
     uint(&e, 1, 1);
     uout(&e);
-    putchar(’\n’);
+    putchar('\n');
 
     for (i = 1; i <= 20; i++) {
         factorial(&tmp, i);
         uinv(&tmp);
         uadd(&e, &tmp);
         uout(&e);
-        putchar(’\n’);
+        putchar('\n');
     }
     return 0;
 }
