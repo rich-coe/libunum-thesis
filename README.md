@@ -1,6 +1,6 @@
 # libunum - source code from Laslo Hunhold's Thesis
 
-I have not verified that all the source code copied correctly from the publisheed pdf.  The code in the current state in libunum and problems compiles and runs.
+I have not verified that all the source code copied correctly from the published pdf.  The code in the current state in libunum and problems compiles and runs.
 
 Source code from the thesis published from 
 <http://frign.de/publications/2016-11-08-the_unum_number_format.pdf>
